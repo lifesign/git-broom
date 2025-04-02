@@ -4,7 +4,8 @@ set -euo pipefail
 # --------------------------
 # 配置变量
 # --------------------------
-clone_dir="cleanup-repo"
+WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+clone_dir="${WORK_DIR}/cleanup-repo"
 protected_branches=("master" "main")
 preview_mode="summary"  # 预览模式：summary/detail
 main_branch="master"    # 主分支名称
@@ -168,7 +169,7 @@ fi
 # --------------------------
 # 7. 清理环境
 # --------------------------
-cd ..
-read -p "是否删除克隆的临时目录 $clone_dir？[y/N] " clean
-[[ "$clean" == [yY] ]] && rm -rf "$clone_dir"
+cd "$WORK_DIR"
+read -p "是否删除克隆的临时目录 ${clone_dir}？[y/N] " clean
+[[ "$clean" == [yY] ]] && rm -rf "${clone_dir}"
 print_success "操作完成"
