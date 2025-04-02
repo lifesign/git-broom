@@ -20,7 +20,8 @@ print_warning() { echo -e "\033[1;33m⚠️ $1\033[0m"; }
 print_error() { echo -e "\033[1;31m✗ $1\033[0m" >&2; exit 1; }
 
 usage() {
-    echo "用法: $0 <仓库URL> [选项]"
+    local script_name=$(basename "$0")
+    echo "用法: $script_name <仓库URL> [选项]"
     echo "选项:"
     echo "  -p <mode>   预览模式: summary（摘要，默认） 或 detail（完整详情）"
     echo "  -t <num>    分支数量阈值（默认10），超过此值时切换日期格式"
