@@ -8,6 +8,8 @@ clone_dir="cleanup-repo"
 protected_branches=("master" "main")
 preview_mode="summary"  # 预览模式：summary/detail
 main_branch="master"    # 主分支名称
+date_threshold=10      # 分支数量阈值，超过此值时切换日期格式
+date_format="year"     # 日期格式：month（按月）或 year（按年）
 
 # --------------------------
 # 函数定义
@@ -21,6 +23,8 @@ usage() {
     echo "用法: $0 <仓库URL> [选项]"
     echo "选项:"
     echo "  -p <mode>   预览模式: summary（摘要，默认） 或 detail（完整详情）"
+    echo "  -t <num>    分支数量阈值（默认10），超过此值时切换日期格式"
+    echo "  -f <format> 日期格式：month（按月）或 year（按年），默认为 month"
     exit 1
 }
 
@@ -31,9 +35,11 @@ usage() {
 repo_url="$1"
 shift
 
-while getopts "p:" opt; do
+while getopts "p:t:f:" opt; do
     case $opt in
         p) preview_mode="$OPTARG" ;;
+        t) date_threshold="$OPTARG" ;;
+        f) date_format="$OPTARG" ;;
         *) usage ;;
     esac
 done
@@ -79,28 +85,38 @@ merged_branches=$(
     grep -Ev "^($protected_regex)$"
 )
 
-
 [[ -z "$merged_branches" ]] && { print_success "无需删除分支"; exit 0; }
 
 # 初始化统计数据结构
 declare -a dates_array
 declare -a authors_array
 
+# 获取分支总数
+branch_count=$(wc -l <<< "$merged_branches" | tr -d ' ')
+
+# 根据分支数量确定日期格式
+if [[ $branch_count -gt $date_threshold ]]; then
+    if [[ $date_format == "month" ]]; then
+        date_format_str="%Y-%m"
+    elif [[ $date_format == "year" ]]; then
+        date_format_str="%Y"
+    else
+        date_format_str="%Y-%m"
+    fi
+else
+    date_format_str="%Y-%m-%d"
+fi
+
 # 收集分支统计信息
 while IFS='|' read -r branch date author; do
-    date_key=${date%% *}
+    # 使用date命令转换日期格式
+    date_key=$(date -j -f "%Y-%m-%d %H:%M:%S %z" "${date}" "+$date_format_str" 2>/dev/null || echo "${date%% *}")
     dates_array+=($date_key)
     authors_array+=($author)
 done < <(
     git branch --merged $main_branch --format="%(refname:short)|%(committerdate:iso)|%(authorname)" |
     grep -Ev "^($protected_regex)\|"
 )
-
-# git branch --merged master --format="%(refname:short)|%(committerdate:iso)|%(authorname)" | \
-# grep -Ev "^($protected_regex)\|" | while IFS='|' read -r branch date author; do
-#     branch_dates["${date%% *}"]=$(( ${branch_dates["${date%% *}"]:-0} + 1 ))
-#     branch_authors["$author"]=$(( ${branch_authors["$author"]:-0} + 1 ))
-# done
 
 
 # --------------------------
@@ -120,7 +136,7 @@ case "$preview_mode" in
     "summary")
         # 按日期统计
         echo -e "\n\033[1m按最后提交日期统计：\033[0m"
-        printf "%s\n" "${dates_array[@]}" | sort | uniq -c | sort -rn | while read -r count date; do
+        printf "%s\n" "${dates_array[@]}" | sort -r | uniq -c | while read -r count date; do
             printf "  %-12s : %2d 分支\n" "$date" "$count"
         done
 
