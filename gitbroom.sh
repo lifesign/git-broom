@@ -140,10 +140,10 @@ case "$preview_mode" in
             printf "  %-12s : %2d 分支\n" "$date" "$count"
         done
 
-        # 按作者统计
+        # 按作者统计（按分支数量倒序）
         echo -e "\n\033[1m按作者统计：\033[0m"
         printf "%s\n" "${authors_array[@]}" | sort | uniq -c | sort -rn | while read -r count author; do
-            printf "  %s : %2d 分支\n" "$author" "$count"
+            printf "  %-30s : %2d 分支\n" "$author" "$count"
         done
         ;;
 
