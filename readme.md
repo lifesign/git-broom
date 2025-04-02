@@ -27,12 +27,12 @@ git clone https://github.com/lifesign/git-broom.git
 cd gitbroom
 
 # 或直接下载脚本文件
-curl -O https://raw.githubusercontent.com/lifesign/git-broom/refs/heads/main/gitbroom.sh
+curl -O https://raw.githubusercontent.com/lifesign/git-broom/refs/heads/main/gitbroom
 ```
 
 2. 设置执行权限
 ```bash
-chmod +x gitbroom.sh
+chmod +x gitbroom
 ```
 
 3. 配置环境变量（可选）
